@@ -11,7 +11,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'Home',
-        component: () => import("../views/admin/Admin.vue"),
+        component: () => import("../views/public/Home.vue"),
       },
     ],
   },
@@ -19,11 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/admin',
     component: AdminLayout, // Layout для страниц администратора
     children: [
-      // {
-      //   path: 'dashboard',
-      //   name: 'AdminDashboard',
-      //   component: () => import('@/views/admin/AdminDashboard.vue'),
-      // },
+      {
+        path: '',
+        name: 'AdminDashboard',
+        component: () => import('../views/admin/Admin.vue'),
+      },
       // {
       //   path: 'users',
       //   name: 'UserManagement',

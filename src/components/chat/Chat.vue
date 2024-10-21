@@ -1,221 +1,438 @@
-<script lang="ts" setup>
-import type { Mail } from './data'
-
-import { Input } from '../ui/input'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable/index'
-import { Separator } from '../ui/separator'
+<script setup lang="ts">
+import { Badge } from '../ui/badge'
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../ui/tabs'
-import { TooltipProvider } from '../ui/tooltip'
-import { cn } from '../../lib/utils'
-import { refDebounced } from '@vueuse/core'
-import { Search,} from 'lucide-vue-next'
-import { computed, ref } from 'vue'
-import AccountSwitcher from './AccountSwitcher.vue'
-import MailDisplay from './ChatDisplay.vue'
-import MailList from './ChatList.vue'
-import Nav, { type LinkProp } from './Nav.vue'
-
-interface MailProps {
-  accounts: {
-    label: string
-    email: string
-    icon: string
-  }[]
-  mails: Mail[]
-  defaultLayout?: number[]
-  defaultCollapsed?: boolean
-  navCollapsedSize: number
-}
-
-const props = withDefaults(defineProps<MailProps>(), {
-  defaultCollapsed: false,
-  defaultLayout: () => [265, 440, 655],
-})
-
-const isCollapsed = ref(props.defaultCollapsed)
-const selectedMail = ref<string | undefined>(props.mails[0].id)
-const searchValue = ref('')
-const debouncedSearch = refDebounced(searchValue, 250)
-
-const filteredMailList = computed(() => {
-  let output: Mail[] = []
-  const searchValue = debouncedSearch.value?.trim()
-  if (!searchValue) {
-    output = props.mails
-  }
-
-  else {
-    output = props.mails.filter((item) => {
-      return item.name.includes(debouncedSearch.value)
-        || item.email.includes(debouncedSearch.value)
-        || item.name.includes(debouncedSearch.value)
-        || item.subject.includes(debouncedSearch.value)
-        || item.text.includes(debouncedSearch.value)
-    })
-  }
-
-  return output
-})
-
-const unreadMailList = computed(() => filteredMailList.value.filter(item => !item.read))
-
-const selectedMailData = computed(() => props.mails.find(item => item.id === selectedMail.value))
-
-const links: LinkProp[] = [
-  {
-    title: 'Inbox',
-    label: '128',
-    icon: 'lucide:inbox',
-    variant: 'default',
-  },
-  {
-    title: 'Drafts',
-    label: '9',
-    icon: 'lucide:file',
-    variant: 'ghost',
-  },
-  {
-    title: 'Sent',
-    label: '',
-    icon: 'lucide:send',
-    variant: 'ghost',
-  },
-  {
-    title: 'Junk',
-    label: '23',
-    icon: 'lucide:archive',
-    variant: 'ghost',
-  },
-  {
-    title: 'Trash',
-    label: '',
-    icon: 'lucide:trash',
-    variant: 'ghost',
-  },
-  {
-    title: 'Archive',
-    label: '',
-    icon: 'lucide:archive',
-    variant: 'ghost',
-  },
-]
-
-const links2: LinkProp[] = [
-  {
-    title: 'Social',
-    label: '972',
-    icon: 'lucide:user-2',
-    variant: 'ghost',
-  },
-  {
-    title: 'Updates',
-    label: '342',
-    icon: 'lucide:alert-circle',
-    variant: 'ghost',
-  },
-  {
-    title: 'Forums',
-    label: '128',
-    icon: 'lucide:message-square',
-    variant: 'ghost',
-  },
-  {
-    title: 'Shopping',
-    label: '8',
-    icon: 'lucide:shopping-cart',
-    variant: 'ghost',
-  },
-  {
-    title: 'Promotions',
-    label: '21',
-    icon: 'lucide:archive',
-    variant: 'ghost',
-  },
-]
-
-function onCollapse() {
-  isCollapsed.value = true
-}
-
-function onExpand() {
-  isCollapsed.value = false
-}
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '../ui/resizable'
+import { Button } from '../ui/button'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Textarea } from '../ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { Bird, Book, Bot, Code2, CornerDownLeft, LifeBuoy, Mic, Paperclip, Rabbit, Settings, Settings2, Share, SquareTerminal, SquareUser, Triangle, Turtle, MessagesSquare } from 'lucide-vue-next'
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="0">
-    <ResizablePanelGroup
-      id="resize-panel-group-1"
-      direction="horizontal"
-      class="h-full max-h-[800px] items-stretch"
-    >
-      <ResizablePanel
-        id="resize-panel-1"
-        :default-size="defaultLayout[0]"
-        :collapsed-size="navCollapsedSize"
-        collapsible
-        :min-size="15"
-        :max-size="20"
-        :class="cn(isCollapsed && 'min-w-[50px] transition-all duration-300 ease-in-out')"
-        @expand="onExpand"
-        @collapse="onCollapse"
-      >
-        <div :class="cn('flex h-[52px] items-center justify-center', isCollapsed ? 'h-[52px]' : 'px-2')">
-          <AccountSwitcher :is-collapsed="isCollapsed" :accounts="accounts" />
+  <!-- <ResizablePanelGroup
+    id="handle-demo-group-1"
+    direction="horizontal"
+    class="flex min-h-screen w-full"
+  >
+    <ResizablePanel id="handle-demo-panel-1" :min-size="20" :max-size="90" :default-size="25">
+      <aside class="h-full border-r">
+        <div class="border-b p-2">
+          <Button variant="outline" size="icon" aria-label="Home">
+            <Triangle class="size-5 fill-foreground" />
+          </Button>
         </div>
-        <Separator />
-        <Nav
-          :is-collapsed="isCollapsed"
-          :links="links"
-        />
-        <Separator />
-        <Nav
-          :is-collapsed="isCollapsed"
-          :links="links2"
-        />
-      </ResizablePanel>
-      <ResizableHandle id="resize-handle-1" with-handle />
-      <ResizablePanel id="resize-panel-2" :default-size="defaultLayout[1]" :min-size="30">
-        <Tabs default-value="all">
-          <div class="flex items-center px-4 py-2">
-            <h1 class="text-xl font-bold">
-              Inbox
-            </h1>
-            <TabsList class="ml-auto">
-              <TabsTrigger value="all" class="text-zinc-600 dark:text-zinc-200">
-                All mail
-              </TabsTrigger>
-              <TabsTrigger value="unread" class="text-zinc-600 dark:text-zinc-200">
-                Unread
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <Separator />
-          <div class="bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <form>
-              <div class="relative">
-                <Search class="absolute left-2 top-2.5 size-4 text-muted-foreground" />
-                <Input v-model="searchValue" placeholder="Search" class="pl-8" />
-              </div>
+        <nav class="grid gap-1 p-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="rounded-lg bg-muted"
+                  aria-label="Chats"
+                >
+                  <MessagesSquare class="size-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" :side-offset="5">
+                Chats
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="mt-auto rounded-lg"
+                  aria-label="Account"
+                >
+                  <SquareUser class="size-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" :side-offset="5">
+                Account
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </nav>
+      </aside>
+    </ResizablePanel>
+    <ResizableHandle id="handle-demo-handle-1" with-handle />
+    <ResizablePanel id="handle-demo-panel-2" :default-size="90">
+      <div class="flex h-full items-center justify-center p-6">
+        <span class="font-semibold">Content</span>
+      </div>
+    </ResizablePanel>
+  </ResizablePanelGroup> -->
+  <div class="grid h-screen w-full pl-[56px]">
+    <aside class="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
+      <div class="border-b p-2">
+        <Button variant="outline" size="icon" aria-label="Home">
+          <Triangle class="size-5 fill-foreground" />
+        </Button>
+      </div>
+      <nav class="grid gap-1 p-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="rounded-lg bg-muted"
+                aria-label="Chats"
+              >
+                <MessagesSquare class="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" :side-offset="5">
+              Chats
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="mt-auto rounded-lg"
+                aria-label="Account"
+              >
+                <SquareUser class="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" :side-offset="5">
+              Account
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </nav>
+    </aside>
+    <div class="flex flex-col">
+      <header class="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
+        <h1 class="text-xl font-semibold">
+          Vue3chat
+        </h1>
+        <Drawer>
+          <DrawerTrigger as-child>
+            <Button variant="ghost" size="icon" class="md:hidden">
+              <Settings class="size-4" />
+              <span class="sr-only">Settings</span>
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent class="max-h-[80vh]">
+            <DrawerHeader>
+              <DrawerTitle>Configuration</DrawerTitle>
+              <DrawerDescription>
+                Configure the settings for the model and messages.
+              </DrawerDescription>
+            </DrawerHeader>
+            <form class="grid w-full items-start gap-6 overflow-auto p-4 pt-0">
+              <fieldset class="grid gap-6 rounded-lg border p-4">
+                <legend class="-ml-1 px-1 text-sm font-medium">
+                  Settings
+                </legend>
+                <div class="grid gap-3">
+                  <Label for="model">Model</Label>
+                  <Select>
+                    <SelectTrigger
+                      id="model"
+                      class="items-start [&_[data-description]]:hidden"
+                    >
+                      <SelectValue placeholder="Select a model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="genesis">
+                        <div class="flex items-start gap-3 text-muted-foreground">
+                          <Rabbit class="size-5" />
+                          <div class="grid gap-0.5">
+                            <p>
+                              Neural
+                              <span class="font-medium text-foreground">
+                                Genesis
+                              </span>
+                            </p>
+                            <p class="text-xs" data-description>
+                              Our fastest model for general use cases.
+                            </p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="explorer">
+                        <div class="flex items-start gap-3 text-muted-foreground">
+                          <Bird class="size-5" />
+                          <div class="grid gap-0.5">
+                            <p>
+                              Neural
+                              <span class="font-medium text-foreground">
+                                Explorer
+                              </span>
+                            </p>
+                            <p class="text-xs" data-description>
+                              Performance and speed for efficiency.
+                            </p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="quantum">
+                        <div class="flex items-start gap-3 text-muted-foreground">
+                          <Turtle class="size-5" />
+                          <div class="grid gap-0.5">
+                            <p>
+                              Neural
+                              <span class="font-medium text-foreground">
+                                Quantum
+                              </span>
+                            </p>
+                            <p class="text-xs" data-description>
+                              The most powerful model for complex
+                              computations.
+                            </p>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="grid gap-3">
+                  <Label for="temperature">Temperature</Label>
+                  <Input id="temperature" type="number" placeholder="0.4" />
+                </div>
+                <div class="grid gap-3">
+                  <Label for="top-p">Top P</Label>
+                  <Input id="top-p" type="number" placeholder="0.7" />
+                </div>
+                <div class="grid gap-3">
+                  <Label for="top-k">Top K</Label>
+                  <Input id="top-k" type="number" placeholder="0.0" />
+                </div>
+              </fieldset>
+              <fieldset class="grid gap-6 rounded-lg border p-4">
+                <legend class="-ml-1 px-1 text-sm font-medium">
+                  Messages
+                </legend>
+                <div class="grid gap-3">
+                  <Label for="role">Role</Label>
+                  <Select default-value="system">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="system">
+                        System
+                      </SelectItem>
+                      <SelectItem value="user">
+                        User
+                      </SelectItem>
+                      <SelectItem value="assistant">
+                        Assistant
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="grid gap-3">
+                  <Label for="content">Content</Label>
+                  <Textarea id="content" placeholder="You are a..." />
+                </div>
+              </fieldset>
             </form>
-          </div>
-          <TabsContent value="all" class="m-0">
-            <MailList v-model:selected-mail="selectedMail" :items="filteredMailList" />
-          </TabsContent>
-          <TabsContent value="unread" class="m-0">
-            <MailList v-model:selected-mail="selectedMail" :items="unreadMailList" />
-          </TabsContent>
-        </Tabs>
-      </ResizablePanel>
-      <ResizableHandle id="resiz-handle-2" with-handle />
-      <ResizablePanel id="resize-panel-3" :default-size="defaultLayout[2]">
-        <MailDisplay :mail="selectedMailData" />
-      </ResizablePanel>
-    </ResizablePanelGroup>
-  </TooltipProvider>
+          </DrawerContent>
+        </Drawer>
+        <Button
+          variant="outline"
+          size="sm"
+          class="ml-auto gap-1.5 text-sm"
+        >
+          <Share class="size-3.5" />
+          Share
+        </Button>
+      </header>
+      <main class="p-4">
+        <ResizablePanelGroup
+          id="handle-demo-group-1"
+          direction="horizontal"
+          class="flex min-h-screen w-full"
+        >
+          <ResizablePanel id="handle-demo-panel-1" :min-size="20" :max-size="80" :default-size="25">
+            <div class="relative hidden flex-col items-start gap-8 md:flex">
+              <form class="grid w-full items-start gap-6">
+                <fieldset class="grid gap-6 rounded-lg border p-4">
+                  <legend class="-ml-1 px-1 text-sm font-medium">
+                    Settings
+                  </legend>
+                  <div class="grid gap-3">
+                    <Label for="model">Model</Label>
+                    <Select>
+                      <SelectTrigger
+                        id="model"
+                        class="items-start [&_[data-description]]:hidden"
+                      >
+                        <SelectValue placeholder="Select a model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="genesis">
+                          <div class="flex items-start gap-3 text-muted-foreground">
+                            <Rabbit class="size-5" />
+                            <div class="grid gap-0.5">
+                              <p>
+                                Neural
+                                <span class="font-medium text-foreground">
+                                  Genesis
+                                </span>
+                              </p>
+                              <p class="text-xs" data-description>
+                                Our fastest model for general use cases.
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="explorer">
+                          <div class="flex items-start gap-3 text-muted-foreground">
+                            <Bird class="size-5" />
+                            <div class="grid gap-0.5">
+                              <p>
+                                Neural
+                                <span class="font-medium text-foreground">
+                                  Explorer
+                                </span>
+                              </p>
+                              <p class="text-xs" data-description>
+                                Performance and speed for efficiency.
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="quantum">
+                          <div class="flex items-start gap-3 text-muted-foreground">
+                            <Turtle class="size-5" />
+                            <div class="grid gap-0.5">
+                              <p>
+                                Neural
+                                <span class="font-medium text-foreground">
+                                  Quantum
+                                </span>
+                              </p>
+                              <p class="text-xs" data-description>
+                                The most powerful model for complex computations.
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="grid gap-3">
+                    <Label for="temperature">Temperature</Label>
+                    <Input id="temperature" type="number" placeholder="0.4" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="grid gap-3">
+                      <Label for="top-p">Top P</Label>
+                      <Input id="top-p" type="number" placeholder="0.7" />
+                    </div>
+                    <div class="grid gap-3">
+                      <Label for="top-k">Top K</Label>
+                      <Input id="top-k" type="number" placeholder="0.0" />
+                    </div>
+                  </div>
+                </fieldset>
+                <fieldset class="grid gap-6 rounded-lg border p-4">
+                  <legend class="-ml-1 px-1 text-sm font-medium">
+                    Messages
+                  </legend>
+                  <div class="grid gap-3">
+                    <Label for="role">Role</Label>
+                    <Select default-value="system">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system">
+                          System
+                        </SelectItem>
+                        <SelectItem value="user">
+                          User
+                        </SelectItem>
+                        <SelectItem value="assistant">
+                          Assistant
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="grid gap-3">
+                    <Label for="content">Content</Label>
+                    <Textarea
+                      id="content"
+                      placeholder="You are a..."
+                      class="min-h-[9.5rem]"
+                    />
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle id="handle-demo-handle-1" class="mx-4"with-handle />
+          <ResizablePanel id="handle-demo-panel-2" :default-size="90">
+            <div class="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
+              <Badge variant="outline" class="absolute right-3 top-3">
+                Output
+              </Badge>
+              <div class="flex-1" />
+              <form class="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring">
+                <Label for="message" class="sr-only">
+                  Message
+                </Label>
+                <Textarea
+                  id="message"
+                  placeholder="Type your message here..."
+                  class="min-h-12 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
+                />
+                <div class="flex items-center p-3 pt-0">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button variant="ghost" size="icon">
+                          <Paperclip class="size-4" />
+                          <span class="sr-only">Attach file</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Attach File
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button variant="ghost" size="icon">
+                          <Mic class="size-4" />
+                          <span class="sr-only">Use Microphone</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        Use Microphone
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button type="submit" size="sm" class="ml-auto gap-1.5">
+                    Send Message
+                    <CornerDownLeft class="size-3.5" />
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </main>
+    </div>
+  </div>
 </template>

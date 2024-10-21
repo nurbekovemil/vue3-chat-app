@@ -1,15 +1,6 @@
 <template>
   <div>
-    <header>
-      <!-- Админская навигация -->
-      <nav>
-        <router-link to="/admin/dashboard">Dashboard</router-link>
-        <router-link to="/admin/users">User Management</router-link>
-      </nav>
-    </header>
-
     <main>
-      <!-- Здесь будут отображаться дочерние компоненты -->
       <router-view />
     </main>
   </div>

@@ -8,7 +8,7 @@ import { accounts, mails } from '../../components/chat/data';
       <Chat
         :accounts="accounts"
         :mails="mails"
-        :nav-collapsed-size="4"
+        :nav-collapsed-size="5"
       />
     </div>
   </template>
